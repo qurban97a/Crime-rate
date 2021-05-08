@@ -32,6 +32,33 @@ df.chr <- raw %>%
   select_if(is.character)
 
 names(raw)
+
+# I've replaced outliers with max and min value
+vect_forloop <- c()
+for (n in 1:length(num)) {
+  outvals <- boxplot(df[[num[n]]], plot=F)$out
+  if (length(outvals)>0) {
+    vect_forloop[n] <- num[n]
+  }
+}
+
+vect_forloop <- vect_forloop %>% as.data.frame() %>% drop_na() %>% pull() %>% as.character()
+vect_forloop %>% length()
+
+for (o in vect_forloop) {
+  outvals <- boxplot(df[[o]], plot=F)$out
+  mean <- mean(df[[o]], na.rm = T)
+  
+  o3 <- ifelse(outvals > mean, outvals, NA) %>% na.omit()
+  o1 <- ifelse(outvals < mean, outvals, NA) %>% na.omit()
+  
+  max3 <- quantile(df[[o]], 0.75, na.rm=T) + 1.5 * IQR(df[[o]], na.rm = T)
+  df[which(df[[o]] %in% o3), o] <- max3
+  
+  min1 <- quantile(df[[o]], 0.25, na.rm = T) - 1.5 * IQR(df[[o]], na.rm=T)
+  df[which(df[[o]] %in% o1), o] <- min1
+}
+
 #Multicollinearity
 
 target <- 'ViolentCrimesPerPop'
